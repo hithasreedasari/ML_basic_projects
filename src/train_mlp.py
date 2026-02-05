@@ -16,7 +16,12 @@ from src.utils import ensure_models_dir, get_data
 def main() -> None:
     x_train, x_test, y_train, y_test = get_data()
 
-    model = MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=500, random_state=42)
+    model = MLPClassifier(
+        hidden_layer_sizes=(16, 8),
+        solver="lbfgs",
+        max_iter=1000,
+        random_state=42,
+    )
     model.fit(x_train, y_train)
 
     preds = model.predict(x_test)
