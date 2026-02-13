@@ -167,11 +167,20 @@ def main() -> None:
     try:
         answer = answer_question(question, repo_context, model=model)
     except Exception as exc:
+        details = str(exc).strip()
+        if not details:
+            details = repr(exc)
+        if len(details) > 400:
+            details = details[:400] + "..."
         post_issue_comment(
             repo,
             issue_number,
             github_token,
-            f"I hit an error while generating an answer: `{type(exc).__name__}`.",
+            (
+                "I hit an error while generating an answer.\n\n"
+                f"- Type: `{type(exc).__name__}`\n"
+                f"- Details: `{details}`"
+            ),
         )
         return
 
