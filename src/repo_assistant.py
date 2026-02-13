@@ -62,7 +62,11 @@ def ask_repo_assistant(question: str, repo_context: str, model: str) -> str:
             "Missing dependency: openai. Install with `pip install -r requirements.txt`."
         ) from exc
 
-    client = OpenAI()
+    base_url = os.getenv("OPENAI_BASE_URL")
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=base_url if base_url else None,
+    )
     system_prompt = (
         "You are a software engineering assistant. "
         "Answer using only the provided repository context when possible. "
@@ -92,6 +96,8 @@ def main() -> None:
     except ImportError:
         pass
 
+    default_model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+
     parser = argparse.ArgumentParser(
         description="Ask questions about this repo using OpenAI."
     )
@@ -107,8 +113,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        help="OpenAI model name (default: OPENAI_MODEL or gpt-4o-mini).",
+        default=default_model,
+        help="Model name (default: OPENAI_MODEL or gpt-4o-mini).",
     )
     parser.add_argument(
         "--max-context-chars",

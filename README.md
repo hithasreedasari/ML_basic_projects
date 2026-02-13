@@ -68,6 +68,12 @@ Optional model override:
 $env:OPENAI_MODEL="gpt-4o-mini"
 ```
 
+Optional OpenAI-compatible endpoint override (self-hosted or third-party):
+
+```bash
+$env:OPENAI_BASE_URL="https://your-endpoint.example.com/v1"
+```
+
 2. Ask a question about this repo:
 
 ```bash
@@ -88,7 +94,9 @@ How to enable:
 
 1. Go to `Settings -> Secrets and variables -> Actions`.
 2. Create a repository secret named `OPENAI_API_KEY`.
-3. Push this workflow file: `.github/workflows/repo-assistant.yml`.
+3. Optional for non-OpenAI endpoints: add `OPENAI_BASE_URL`.
+4. Optional model override: add `OPENAI_MODEL`.
+5. Push this workflow file: `.github/workflows/repo-assistant.yml`.
 
 How visitors use it:
 
@@ -101,6 +109,12 @@ How visitors use it:
 ```
 
 The bot will reply in the same issue thread.
+
+Example self-hosted/OpenAI-compatible setup:
+
+1. `OPENAI_BASE_URL`: your server URL ending with `/v1`
+2. `OPENAI_API_KEY`: token expected by that server
+3. `OPENAI_MODEL`: model id served by that endpoint
 
 ## Notes
 

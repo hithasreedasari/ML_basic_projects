@@ -86,7 +86,11 @@ def post_issue_comment(repo: str, issue_number: int, token: str, body: str) -> N
 
 
 def answer_question(question: str, repo_context: str, model: str) -> str:
-    client = OpenAI()
+    base_url = os.getenv("OPENAI_BASE_URL")
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=base_url if base_url else None,
+    )
     system_prompt = (
         "You are a repository assistant. Answer using the provided repository context. "
         "Be concise and practical. If information is missing, explicitly say so."
@@ -119,7 +123,7 @@ def main() -> None:
     event_path = os.getenv("GITHUB_EVENT_PATH")
     github_token = os.getenv("GITHUB_TOKEN")
     openai_key = os.getenv("OPENAI_API_KEY")
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
     max_context_chars = int(os.getenv("MAX_CONTEXT_CHARS", "30000"))
 
     if not event_path or not github_token or not openai_key:
