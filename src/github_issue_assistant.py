@@ -119,6 +119,18 @@ def answer_question(question: str, repo_context: str, model: str) -> str:
     return ""
 
 
+def generate_answer_with_fallback(question: str, repo_context: str, model: str) -> str:
+    fallback_model = os.getenv("OPENAI_FALLBACK_MODEL", "").strip()
+    try:
+        return answer_question(question, repo_context, model=model)
+    except Exception as exc:
+        details = str(exc).lower()
+        memory_related = "requires more system memory" in details or "out of memory" in details
+        if not (memory_related and fallback_model and fallback_model != model):
+            raise
+        return answer_question(question, repo_context, model=fallback_model)
+
+
 def main() -> None:
     event_path = os.getenv("GITHUB_EVENT_PATH")
     github_token = os.getenv("GITHUB_TOKEN")
@@ -165,7 +177,7 @@ def main() -> None:
         return
 
     try:
-        answer = answer_question(question, repo_context, model=model)
+        answer = generate_answer_with_fallback(question, repo_context, model=model)
     except Exception as exc:
         details = str(exc).strip()
         if not details:
