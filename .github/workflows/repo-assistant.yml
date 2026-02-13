@@ -31,5 +31,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: gpt-4o-mini
-          MAX_CONTEXT_CHARS: "100000"
+          MAX_CONTEXT_CHARS: "30000"
         run: python src/github_issue_assistant.py

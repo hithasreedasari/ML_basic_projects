@@ -1,9 +1,10 @@
 import json
 import os
+import time
 from pathlib import Path
 from urllib import error, request
 
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 
 
 DEFAULT_EXCLUDE_DIRS = {
@@ -90,20 +91,28 @@ def answer_question(question: str, repo_context: str, model: str) -> str:
         "You are a repository assistant. Answer using the provided repository context. "
         "Be concise and practical. If information is missing, explicitly say so."
     )
-    resp = client.responses.create(
-        model=model,
-        input=[
-            {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": (
-                    f"Repository context:\n{repo_context}\n\n"
-                    f"Question from GitHub issue comment:\n{question}"
-                ),
-            },
-        ],
-    )
-    return resp.output_text.strip()
+    for attempt in range(3):
+        try:
+            resp = client.responses.create(
+                model=model,
+                max_output_tokens=400,
+                input=[
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Repository context:\n{repo_context}\n\n"
+                            f"Question from GitHub issue comment:\n{question}"
+                        ),
+                    },
+                ],
+            )
+            return resp.output_text.strip()
+        except RateLimitError:
+            if attempt == 2:
+                raise
+            time.sleep(2 ** attempt)
+    return ""
 
 
 def main() -> None:
@@ -111,7 +120,7 @@ def main() -> None:
     github_token = os.getenv("GITHUB_TOKEN")
     openai_key = os.getenv("OPENAI_API_KEY")
     model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    max_context_chars = int(os.getenv("MAX_CONTEXT_CHARS", "100000"))
+    max_context_chars = int(os.getenv("MAX_CONTEXT_CHARS", "30000"))
 
     if not event_path or not github_token or not openai_key:
         raise SystemExit("Missing required env vars: GITHUB_EVENT_PATH, GITHUB_TOKEN, OPENAI_API_KEY")
