@@ -53,6 +53,55 @@ python -m src.train_mlp
 pytest -q
 ```
 
+## Repo AI assistant (OpenAI API)
+
+1. Add your API key to environment:
+
+```bash
+# PowerShell
+$env:OPENAI_API_KEY="your_api_key_here"
+```
+
+Optional model override:
+
+```bash
+$env:OPENAI_MODEL="gpt-4o-mini"
+```
+
+2. Ask a question about this repo:
+
+```bash
+python -m src.repo_assistant "How do I train the sklearn baseline?"
+```
+
+Without an inline question, it opens an interactive prompt:
+
+```bash
+python -m src.repo_assistant
+```
+
+## Public GitHub Q&A bot (`/ask`)
+
+This repo also includes a GitHub Actions bot that answers questions in issues.
+
+How to enable:
+
+1. Go to `Settings -> Secrets and variables -> Actions`.
+2. Create a repository secret named `OPENAI_API_KEY`.
+3. Push this workflow file: `.github/workflows/repo-assistant.yml`.
+
+How visitors use it:
+
+1. Open any issue in this repo.
+2. Add a comment starting with `/ask`.
+3. Example:
+
+```text
+/ask How do I run the sklearn baseline training?
+```
+
+The bot will reply in the same issue thread.
+
 ## Notes
 
 - Models are saved under `models/` (`.joblib` files).
