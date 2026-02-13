@@ -115,6 +115,14 @@ Example self-hosted/OpenAI-compatible setup:
 1. `OPENAI_BASE_URL`: your server URL ending with `/v1`
 2. `OPENAI_API_KEY`: token expected by that server
 3. `OPENAI_MODEL`: model id served by that endpoint
+4. Optional `OPENAI_FALLBACK_MODEL`: backup model id
+5. Optional `OPENAI_MODEL_CANDIDATES`: comma-separated backup model ids
+
+Low-memory Ollama tip:
+
+- If you see memory errors, use small models such as `llama3.2:1b` and set:
+  - `OPENAI_MODEL=llama3.2:1b`
+  - `OPENAI_FALLBACK_MODEL=tinyllama:latest`
 
 ## Notes
 

@@ -119,16 +119,75 @@ def answer_question(question: str, repo_context: str, model: str) -> str:
     return ""
 
 
-def generate_answer_with_fallback(question: str, repo_context: str, model: str) -> str:
+def is_memory_related_error(exc: Exception) -> bool:
+    details = str(exc).lower()
+    return (
+        "requires more system memory" in details
+        or "out of memory" in details
+        or "not enough memory" in details
+    )
+
+
+def is_model_missing_error(exc: Exception) -> bool:
+    details = str(exc).lower()
+    return "model" in details and ("not found" in details or "does not exist" in details)
+
+
+def build_model_candidates(primary_model: str) -> list[str]:
+    candidates = [primary_model]
+
     fallback_model = os.getenv("OPENAI_FALLBACK_MODEL", "").strip()
-    try:
-        return answer_question(question, repo_context, model=model)
-    except Exception as exc:
-        details = str(exc).lower()
-        memory_related = "requires more system memory" in details or "out of memory" in details
-        if not (memory_related and fallback_model and fallback_model != model):
-            raise
-        return answer_question(question, repo_context, model=fallback_model)
+    if fallback_model:
+        candidates.append(fallback_model)
+
+    extra_candidates = os.getenv("OPENAI_MODEL_CANDIDATES", "").strip()
+    if extra_candidates:
+        candidates.extend([m.strip() for m in extra_candidates.split(",") if m.strip()])
+
+    base_url = (os.getenv("OPENAI_BASE_URL") or "").lower()
+    if "127.0.0.1:11434" in base_url or "localhost:11434" in base_url:
+        # Common lightweight Ollama model names for low-memory machines.
+        candidates.extend([
+            "llama3.2:1b",
+            "qwen2.5:0.5b",
+            "qwen2.5:1.5b",
+            "tinyllama:latest",
+            "phi3:mini",
+        ])
+
+    deduped = []
+    seen = set()
+    for model in candidates:
+        if model and model not in seen:
+            deduped.append(model)
+            seen.add(model)
+    return deduped
+
+
+def generate_answer_with_fallback(question: str, repo_context: str, model: str) -> str:
+    candidates = build_model_candidates(model)
+    last_exc: Exception | None = None
+
+    for candidate in candidates:
+        context_variant = repo_context
+        for _ in range(3):
+            try:
+                return answer_question(question, context_variant, model=candidate)
+            except Exception as exc:
+                last_exc = exc
+                if is_memory_related_error(exc):
+                    if len(context_variant) > 3000:
+                        # Reduce prompt size before switching models.
+                        context_variant = context_variant[: max(3000, len(context_variant) // 2)]
+                        continue
+                    break
+                if is_model_missing_error(exc):
+                    break
+                raise
+
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("No model candidates available")
 
 
 def main() -> None:

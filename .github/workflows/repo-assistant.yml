@@ -31,5 +31,6 @@ jobs:
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           OPENAI_FALLBACK_MODEL: ${{ secrets.OPENAI_FALLBACK_MODEL }}
+          OPENAI_MODEL_CANDIDATES: ${{ secrets.OPENAI_MODEL_CANDIDATES }}
           MAX_CONTEXT_CHARS: "12000"
         run: python src/github_issue_assistant.py
